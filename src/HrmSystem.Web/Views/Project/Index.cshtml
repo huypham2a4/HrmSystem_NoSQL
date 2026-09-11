@@ -28,16 +28,16 @@
                     @switch (proj.Status)
                     {
                         case "Active":
-                            <span class="badge bg-success">Đang thực hiện (Active)</span>
+                            <span class="badge-status-active">Đang thực hiện (Active)</span>
                             break;
                         case "Completed":
-                            <span class="badge bg-primary">Đã hoàn thành</span>
+                            <span class="badge-status-completed">Đã hoàn thành</span>
                             break;
                         case "Planning":
-                            <span class="badge bg-warning text-dark">Lập kế hoạch</span>
+                            <span class="badge-status-planning">Lập kế hoạch</span>
                             break;
                         default:
-                            <span class="badge bg-secondary">@proj.Status</span>
+                            <span class="badge-status-probation">@proj.Status</span>
                             break;
                     }
                 </div>
