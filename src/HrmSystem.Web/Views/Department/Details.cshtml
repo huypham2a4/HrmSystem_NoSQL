@@ -1,0 +1,185 @@
+@model HrmSystem.Core.Entities.Department
+@{
+    ViewData["Title"] = "Chi Tiết Phòng Ban - " + Model.Name;
+    var employees = ViewBag.Employees as List<HrmSystem.Core.Entities.Employee> ?? new List<HrmSystem.Core.Entities.Employee>();
+    var projects = ViewBag.Projects as List<HrmSystem.Core.Entities.Project> ?? new List<HrmSystem.Core.Entities.Project>();
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="code-badge fs-6">@Model.Code</span>
+            <h3 class="fw-bold mb-0">@Model.Name</h3>
+        </div>
+        <p class="text-muted small mb-0">Thông tin phòng ban, vị trí địa lý (Embedded doc) và danh sách nhân sự trực thuộc</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="fa-solid fa-pen me-1"></i> Chỉnh sửa
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="card-hrm p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i>Tổng Quan</h5>
+            <p class="text-muted small mb-3">@Model.Description</p>
+
+            <ul class="list-unstyled small mb-0">
+                <li class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Ngân sách hoạt động:</span>
+                    <strong class="text-success fs-6">@Model.Budget.ToString("N0") đ</strong>
+                </li>
+                <li class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Số lượng nhân sự:</span>
+                    <strong class="text-primary fs-6">@employees.Count nhân viên</strong>
+                </li>
+                <li class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Email liên hệ:</span>
+                    <span>@(Model.ContactEmail ?? "N/A")</span>
+                </li>
+                <li class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Ngày thành lập:</span>
+                    <span>@Model.EstablishedDate.ToString("dd/MM/yyyy")</span>
+                </li>
+                <li class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Trạng thái:</span>
+                    <span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary")">@Model.Status</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Embedded Document: Location -->
+        <div class="card-hrm">
+            <div class="card-hrm-header">
+                <h6 class="card-hrm-title fs-6">
+                    <i class="fa-solid fa-map-location-dot text-danger"></i>
+                    Vị Trí Làm Việc (Embedded <code>location</code>)
+                </h6>
+            </div>
+            <div class="card-hrm-body small">
+                <p class="mb-2"><strong>Tòa nhà:</strong> @Model.Location.Building</p>
+                <p class="mb-2"><strong>Tầng:</strong> @Model.Location.Floor</p>
+                <p class="mb-2"><strong>Số phòng:</strong> @Model.Location.RoomNumber</p>
+                <p class="mb-0"><strong>Thành phố:</strong> @Model.Location.City</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Danh sách nhân viên trong phòng -->
+        <div class="card-hrm mb-4">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-users text-primary"></i>
+                    Danh Sách Nhân Viên (@employees.Count người)
+                </h5>
+                <a asp-controller="Employee" asp-action="Create" class="btn btn-sm btn-primary-custom">
+                    <i class="fa-solid fa-user-plus me-1"></i> Thêm Nhân Viên
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hrm">
+                    <thead>
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ & Tên</th>
+                            <th>Chức Danh</th>
+                            <th class="text-end">Mức Lương</th>
+                            <th class="text-center">Trạng Thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (employees.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted small">
+                                    Chưa có nhân viên nào thuộc phòng ban này.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var emp in employees)
+                        {
+                            <tr>
+                                <td><span class="code-badge">@emp.EmployeeCode</span></td>
+                                <td class="fw-bold">
+                                    <a asp-controller="Employee" asp-action="Details" asp-route-id="@emp.Id" class="text-dark text-decoration-none">
+                                        @emp.FullName
+                                    </a>
+                                </td>
+                                <td>@emp.Position</td>
+                                <td class="text-end fw-semibold text-success">@emp.Salary.ToString("N0") đ</td>
+                                <td class="text-center">
+                                    <span class="badge @(emp.Status == "Active" ? "bg-success" : "bg-warning text-dark")">@emp.Status</span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="Employee" asp-action="Details" asp-route-id="@emp.Id" class="btn btn-sm btn-outline-info">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Dự án phòng ban phụ trách -->
+        <div class="card-hrm">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-diagram-project text-info"></i>
+                    Dự Án Phụ Trách (@projects.Count)
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hrm">
+                    <thead>
+                        <tr>
+                            <th>Mã DA</th>
+                            <th>Tên Dự Án</th>
+                            <th class="text-end">Ngân Sách</th>
+                            <th class="text-center">Số Thành Viên</th>
+                            <th class="text-center">Trạng Thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (projects.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted small">
+                                    Phòng ban hiện chưa phụ trách dự án nào.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var p in projects)
+                        {
+                            <tr>
+                                <td><span class="code-badge">@p.Code</span></td>
+                                <td class="fw-bold">@p.Name</td>
+                                <td class="text-end">@p.Budget.ToString("N0") đ</td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary rounded-pill">@p.Members.Count thành viên</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">@p.Status</span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="Project" asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-outline-secondary">
+                                        Xem <i class="fa-solid fa-chevron-right ms-1"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

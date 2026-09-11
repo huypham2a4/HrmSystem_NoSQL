@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{262CCB38-075F-4B06-A720-2E8035FD1F83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrmSystem.Core", "src\HrmSystem.Core\HrmSystem.Core.csproj", "{7C4C787D-83DC-480E-AF31-4D2708DE382D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrmSystem.Infrastructure", "src\HrmSystem.Infrastructure\HrmSystem.Infrastructure.csproj", "{FED37E30-85E6-457F-8684-FA49FD07D1AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrmSystem.Web", "src\HrmSystem.Web\HrmSystem.Web.csproj", "{ADA5B07B-47C0-4570-BC9F-750B4C6DC295}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C4C787D-83DC-480E-AF31-4D2708DE382D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C4C787D-83DC-480E-AF31-4D2708DE382D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C4C787D-83DC-480E-AF31-4D2708DE382D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C4C787D-83DC-480E-AF31-4D2708DE382D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FED37E30-85E6-457F-8684-FA49FD07D1AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FED37E30-85E6-457F-8684-FA49FD07D1AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FED37E30-85E6-457F-8684-FA49FD07D1AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FED37E30-85E6-457F-8684-FA49FD07D1AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADA5B07B-47C0-4570-BC9F-750B4C6DC295}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADA5B07B-47C0-4570-BC9F-750B4C6DC295}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADA5B07B-47C0-4570-BC9F-750B4C6DC295}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADA5B07B-47C0-4570-BC9F-750B4C6DC295}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7C4C787D-83DC-480E-AF31-4D2708DE382D} = {262CCB38-075F-4B06-A720-2E8035FD1F83}
+		{FED37E30-85E6-457F-8684-FA49FD07D1AA} = {262CCB38-075F-4B06-A720-2E8035FD1F83}
+		{ADA5B07B-47C0-4570-BC9F-750B4C6DC295} = {262CCB38-075F-4B06-A720-2E8035FD1F83}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,482 @@
+@model HrmSystem.Core.Dtos.DashboardOverviewDto
+@{
+    ViewData["Title"] = "Dashboard Thống Kê Tương Tác - MongoDB Aggregation";
+    var providerInfo = ViewBag.ProviderInfo as HrmSystem.Infrastructure.IDatabaseProviderInfo;
+    var indexes = ViewBag.Indexes as List<HrmSystem.Infrastructure.Configuration.CollectionIndexInfo> ?? new List<HrmSystem.Infrastructure.Configuration.CollectionIndexInfo>();
+}
+
+<!-- Provider & Architecture Hero Banner -->
+<div class="provider-banner">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="provider-tag"><i class="fa-solid fa-leaf text-success me-1"></i> Active: @(providerInfo?.CurrentProvider ?? "MongoDB")</span>
+            <span class="badge bg-secondary">DB: @(providerInfo?.DatabaseName ?? "HrmDb_PhamThanhHuy_2001230304")</span>
+            <span class="badge bg-info text-dark">3 Collections: departments | employees | projects</span>
+        </div>
+        <h4 class="mb-1 text-white fw-bold">Hệ Thống Quản Lý Nhân Sự Doanh Nghiệp (HRM NoSQL)</h4>
+        <p class="mb-0 text-white-50 small">
+            Phát triển theo <strong>Repository Pattern</strong> (Core Interfaces ⟷ MongoDB Infrastructure). Sẵn sàng chuyển đổi provider sang Cassandra, Neo4j, Redis mà không cần sửa Controller.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="#indexes-section" class="btn btn-sm btn-outline-light">
+            <i class="fa-solid fa-bolt text-warning me-1"></i> Xem Indexes (@indexes.Count)
+        </a>
+        <a href="#pipeline-section" class="btn btn-sm btn-outline-info">
+            <i class="fa-solid fa-filter me-1"></i> Aggregation Pipeline
+        </a>
+    </div>
+</div>
+
+<!-- 5 Stat KPI Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-blue">
+            <div class="kpi-header">
+                <p class="kpi-title">Tổng Nhân Sự</p>
+                <div class="kpi-icon-badge"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="kpi-value">@Model.TotalEmployees</div>
+            <div class="kpi-subtitle">
+                <i class="fa-solid fa-circle-check me-1"></i> @Model.ActiveEmployees Đang hoạt động
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-green">
+            <div class="kpi-header">
+                <p class="kpi-title">Phòng Ban</p>
+                <div class="kpi-icon-badge"><i class="fa-solid fa-building"></i></div>
+            </div>
+            <div class="kpi-value">@Model.TotalDepartments</div>
+            <div class="kpi-subtitle">
+                <i class="fa-solid fa-layer-group me-1"></i> Embedded Location doc
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-purple">
+            <div class="kpi-header">
+                <p class="kpi-title">Dự Án Đang Chạy</p>
+                <div class="kpi-icon-badge"><i class="fa-solid fa-diagram-project"></i></div>
+            </div>
+            <div class="kpi-value">@Model.ActiveProjects <small class="fs-6 fw-normal">/ @Model.TotalProjects</small></div>
+            <div class="kpi-subtitle">
+                <i class="fa-solid fa-people-roof me-1"></i> Mảng phân công thành viên
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-orange">
+            <div class="kpi-header">
+                <p class="kpi-title">Quỹ Lương Tháng</p>
+                <div class="kpi-icon-badge"><i class="fa-solid fa-money-bill-wave"></i></div>
+            </div>
+            <div class="kpi-value" style="font-size: 1.55rem;">@Model.TotalMonthlyPayroll.ToString("N0") <small class="fs-6">đ</small></div>
+            <div class="kpi-subtitle">
+                <i class="fa-solid fa-calculator me-1"></i> TB: @Model.AverageSalary.ToString("N0") đ/người
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4 Interactive Charts Section -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Headcount & Average Salary by Department -->
+    <div class="col-lg-8">
+        <div class="card-hrm h-100">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-chart-column text-primary"></i>
+                    Nhân Sự & Mức Lương Trung Bình Theo Phòng Ban
+                </h5>
+                <span class="badge bg-primary-subtle text-primary border">MongoDB $group Pipeline</span>
+            </div>
+            <div class="card-hrm-body">
+                <div style="height: 320px; position: relative;">
+                    <canvas id="deptSalaryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Top Skills Distribution ($unwind + $group) -->
+    <div class="col-lg-4">
+        <div class="card-hrm h-100">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-lightbulb text-warning"></i>
+                    Top Kỹ Năng Doanh Nghiệp
+                </h5>
+                <span class="badge bg-warning-subtle text-warning border">$unwind Mảng Skills</span>
+            </div>
+            <div class="card-hrm-body">
+                <div style="height: 320px; position: relative;">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Project Status Distribution -->
+    <div class="col-lg-5">
+        <div class="card-hrm h-100">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-pie-chart text-success"></i>
+                    Tỷ Lệ Trạng Thái Dự Án
+                </h5>
+                <span class="badge bg-success-subtle text-success border">Projects Collection</span>
+            </div>
+            <div class="card-hrm-body">
+                <div style="height: 280px; position: relative;">
+                    <canvas id="projectStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Salary Distribution by Position -->
+    <div class="col-lg-7">
+        <div class="card-hrm h-100">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-ranking-star text-info"></i>
+                    Mức Lương Bình Quân Theo Chức Vụ
+                </h5>
+                <span class="badge bg-info-subtle text-info border">Position Aggregation</span>
+            </div>
+            <div class="card-hrm-body">
+                <div style="height: 280px; position: relative;">
+                    <canvas id="positionSalaryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department Statistics Table -->
+<div class="card-hrm mb-4">
+    <div class="card-hrm-header">
+        <h5 class="card-hrm-title">
+            <i class="fa-solid fa-table-list text-primary"></i>
+            Chi Tiết Thống Kê Phòng Ban (Tổng Hợp Từ Aggregation)
+        </h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hrm">
+            <thead>
+                <tr>
+                    <th>Phòng Ban</th>
+                    <th class="text-center">Số Nhân Viên</th>
+                    <th class="text-end">Lương TB (VNĐ)</th>
+                    <th class="text-end">Lương Thấp Nhất</th>
+                    <th class="text-end">Lương Cao Nhất</th>
+                    <th class="text-end">Tổng Quỹ Lương</th>
+                    <th class="text-end">Ngân Sách Phòng</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var dept in Model.DepartmentStats)
+                {
+                    <tr>
+                        <td class="fw-bold text-dark">
+                            <i class="fa-solid fa-building me-2 text-secondary"></i> @dept.DepartmentName
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary px-3 py-2 rounded-pill">@dept.EmployeeCount NV</span>
+                        </td>
+                        <td class="text-end fw-semibold text-primary">@dept.AverageSalary.ToString("N0") đ</td>
+                        <td class="text-end text-muted">@dept.MinSalary.ToString("N0") đ</td>
+                        <td class="text-end text-success fw-semibold">@dept.MaxSalary.ToString("N0") đ</td>
+                        <td class="text-end fw-bold text-dark">@dept.TotalSalary.ToString("N0") đ</td>
+                        <td class="text-end text-secondary">@dept.Budget.ToString("N0") đ</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Aggregation Pipeline Showcase Section -->
+<div class="card-hrm mb-4" id="pipeline-section">
+    <div class="card-hrm-header bg-dark text-white">
+        <h5 class="card-hrm-title text-white">
+            <i class="fa-solid fa-terminal text-success"></i>
+            Minh Chứng Aggregation Pipeline MongoDB Trong Hệ Thống
+        </h5>
+        <span class="badge bg-success">Chuẩn BSON Syntax</span>
+    </div>
+    <div class="card-hrm-body">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded border">
+                    <h6 class="fw-bold text-primary mb-2">
+                        <i class="fa-solid fa-code me-1"></i> Pipeline 1: Thống Kê Nhân Sự & Quỹ Lương Phòng Ban
+                    </h6>
+                    <p class="small text-muted mb-2">Sử dụng <code>$group</code> với các accumulator: <code>$sum</code>, <code>$avg</code>, <code>$min</code>, <code>$max</code></p>
+                    <pre class="bg-dark text-white p-3 rounded small mb-0" style="max-height: 180px; overflow-y: auto;"><code>[
+  { "$group": {
+      "_id": { 
+        "departmentId": "$departmentId", 
+        "departmentName": "$departmentName" 
+      },
+      "employeeCount": { "$sum": 1 },
+      "averageSalary": { "$avg": "$salary" },
+      "minSalary": { "$min": "$salary" },
+      "maxSalary": { "$max": "$salary" },
+      "totalSalary": { "$sum": "$salary" }
+  }},
+  { "$sort": { "employeeCount": -1 } }
+]</code></pre>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded border">
+                    <h6 class="fw-bold text-warning mb-2">
+                        <i class="fa-solid fa-code me-1"></i> Pipeline 2: Phân Tích Mảng Kỹ Năng Doanh Nghiệp
+                    </h6>
+                    <p class="small text-muted mb-2">Tách phần tử mảng bằng <code>$unwind</code> rồi gom nhóm với <code>$group</code> và <code>$limit</code></p>
+                    <pre class="bg-dark text-white p-3 rounded small mb-0" style="max-height: 180px; overflow-y: auto;"><code>[
+  { "$unwind": "$skills" },
+  { "$group": {
+      "_id": "$skills",
+      "count": { "$sum": 1 }
+  }},
+  { "$sort": { "count": -1 } },
+  { "$limit": 10 }
+]</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MongoDB Indexes Verification Table -->
+<div class="card-hrm mb-4" id="indexes-section">
+    <div class="card-hrm-header">
+        <h5 class="card-hrm-title">
+            <i class="fa-solid fa-bolt text-warning"></i>
+            Danh Sách MongoDB Indexes Đang Hoạt Động Theo Đặc Tả
+        </h5>
+        <span class="badge bg-warning-subtle text-dark border">Unique, Compound, Multikey, Text Search</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hrm">
+            <thead>
+                <tr>
+                    <th>Collection</th>
+                    <th>Tên Index</th>
+                    <th>Khóa (Keys / Fields)</th>
+                    <th>Loại Index</th>
+                    <th class="text-center">Unique?</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var idx in indexes)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge bg-dark">@idx.CollectionName</span>
+                        </td>
+                        <td class="fw-bold text-primary">@idx.IndexName</td>
+                        <td>
+                            <span class="code-badge">@idx.Keys</span>
+                        </td>
+                        <td>
+                            @if (idx.IsUnique)
+                            {
+                                <span class="badge bg-danger-subtle text-danger border">Unique Index</span>
+                            }
+                            else if (idx.IndexName.Contains("compound"))
+                            {
+                                <span class="badge bg-info-subtle text-info border">Compound Index</span>
+                            }
+                            else if (idx.IndexName.Contains("multikey"))
+                            {
+                                <span class="badge bg-warning-subtle text-warning border">Multikey Index (Array)</span>
+                            }
+                            else if (idx.IndexName.Contains("text"))
+                            {
+                                <span class="badge bg-success-subtle text-success border">Full-Text Search Index</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-secondary border">Single Field Index</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            @if (idx.IsUnique)
+                            {
+                                <i class="fa-solid fa-circle-check text-success fs-5"></i>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Dữ liệu từ Model Razor truyền vào JavaScript cho Chart.js
+    const deptLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DepartmentStats.Select(d => d.DepartmentName)));
+    const deptHeadcounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DepartmentStats.Select(d => d.EmployeeCount)));
+    const deptAvgSalaries = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DepartmentStats.Select(d => d.AverageSalary)));
+
+    const skillLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopSkills.Select(s => s.Skill)));
+    const skillCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopSkills.Select(s => s.Count)));
+
+    const projectLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProjectStats.Select(p => p.Status)));
+    const projectCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProjectStats.Select(p => p.Count)));
+
+    const positionLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PositionStats.Select(p => p.Position)));
+    const positionSalaries = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PositionStats.Select(p => p.AverageSalary)));
+
+    // 1. Chart Phòng Ban: Nhân sự & Lương TB (Dual Axis Bar/Line)
+    const ctxDept = document.getElementById('deptSalaryChart').getContext('2d');
+    new Chart(ctxDept, {
+        type: 'bar',
+        data: {
+            labels: deptLabels,
+            datasets: [
+                {
+                    label: 'Số Nhân Sự (người)',
+                    data: deptHeadcounts,
+                    backgroundColor: 'rgba(67, 97, 238, 0.7)',
+                    borderColor: '#4361ee',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Lương Trung Bình (VNĐ)',
+                    data: deptAvgSalaries,
+                    type: 'line',
+                    borderColor: '#f59e0b',
+                    backgroundColor: '#f59e0b',
+                    pointRadius: 6,
+                    borderWidth: 3,
+                    tension: 0.3,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: { display: true, text: 'Nhân sự (Người)' },
+                    grid: { color: '#f1f5f9' },
+                    ticks: { stepSize: 1 }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: { display: true, text: 'Lương TB (VNĐ)' },
+                    grid: { drawOnChartArea: false },
+                    ticks: {
+                        callback: function(val) { return (val / 1000000) + 'M'; }
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Chart Top Kỹ Năng ($unwind Pipeline)
+    const ctxSkills = document.getElementById('skillsChart').getContext('2d');
+    new Chart(ctxSkills, {
+        type: 'bar',
+        data: {
+            labels: skillLabels,
+            datasets: [{
+                label: 'Số nhân viên nắm giữ',
+                data: skillCounts,
+                backgroundColor: [
+                    '#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0',
+                    '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ec4899'
+                ],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    ticks: { stepSize: 1 },
+                    grid: { color: '#f1f5f9' }
+                }
+            }
+        }
+    });
+
+    // 3. Chart Trạng Thái Dự Án (Doughnut)
+    const ctxProject = document.getElementById('projectStatusChart').getContext('2d');
+    new Chart(ctxProject, {
+        type: 'doughnut',
+        data: {
+            labels: projectLabels.map(s => s === 'Active' ? 'Đang chạy (Active)' : s === 'Completed' ? 'Hoàn thành' : s === 'Planning' ? 'Lập kế hoạch' : s),
+            datasets: [{
+                data: projectCounts,
+                backgroundColor: ['#10b981', '#4361ee', '#f59e0b', '#6b7280'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 4. Chart Thu Nhập Theo Chức Vụ (Bar)
+    const ctxPosition = document.getElementById('positionSalaryChart').getContext('2d');
+    new Chart(ctxPosition, {
+        type: 'bar',
+        data: {
+            labels: positionLabels,
+            datasets: [{
+                label: 'Mức Lương (VNĐ)',
+                data: positionSalaries,
+                backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                borderColor: '#10b981',
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    grid: { color: '#f1f5f9' },
+                    ticks: {
+                        callback: function(val) { return (val / 1000000) + ' Tr'; }
+                    }
+                }
+            }
+        }
+    });
+</script>
+}

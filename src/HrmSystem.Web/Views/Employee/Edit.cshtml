@@ -1,0 +1,176 @@
+@model HrmSystem.Core.Entities.Employee
+@{
+    ViewData["Title"] = "Chỉnh Sửa Nhân Viên - " + Model.FullName;
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h3 class="fw-bold mb-1">
+                    <i class="fa-solid fa-user-pen text-primary me-2"></i>Chỉnh Sửa Thông Tin Nhân Viên
+                </h3>
+                <p class="text-muted small mb-0">Cập nhật tài liệu Document nhân sự <code>@Model.EmployeeCode</code> trong MongoDB</p>
+            </div>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left me-1"></i> Xem chi tiết
+            </a>
+        </div>
+
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <!-- Section 1: Thông tin công việc -->
+            <div class="card-hrm">
+                <div class="card-hrm-header">
+                    <h5 class="card-hrm-title">
+                        <i class="fa-solid fa-briefcase text-primary"></i> 1. Thông Tin Công Việc & Định Danh
+                    </h5>
+                </div>
+                <div class="card-hrm-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="EmployeeCode" class="form-label fw-semibold"></label>
+                            <input asp-for="EmployeeCode" class="form-control" readonly style="background-color: #f1f5f9;" />
+                            <small class="text-muted">Mã nhân viên (Unique Index không đổi)</small>
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="FullName" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="DepartmentId" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.DepartmentList">
+                                <option value="">-- Chọn phòng ban --</option>
+                            </select>
+                            <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Position" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <input asp-for="Position" class="form-control" />
+                            <span asp-validation-for="Position" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Salary" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <input asp-for="Salary" class="form-control" type="number" step="500000" />
+                            <span asp-validation-for="Salary" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="HireDate" class="form-label fw-semibold"></label>
+                            <input asp-for="HireDate" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Status" class="form-label fw-semibold"></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Active">Active (Chính thức)</option>
+                                <option value="Probation">Probation (Thử việc)</option>
+                                <option value="OnLeave">OnLeave (Nghỉ phép)</option>
+                                <option value="Terminated">Terminated (Thôi việc)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Mảng Skills -->
+            <div class="card-hrm">
+                <div class="card-hrm-header">
+                    <h5 class="card-hrm-title">
+                        <i class="fa-solid fa-code text-warning"></i> 2. Mảng Kỹ Năng Chuyên Môn (<code>skills</code>)
+                    </h5>
+                    <span class="badge bg-warning-subtle text-dark border">Multikey Array</span>
+                </div>
+                <div class="card-hrm-body">
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Danh sách kỹ năng (Phân tách bằng dấu phẩy)</label>
+                        <input type="text" name="skillsInput" value="@ViewBag.SkillsCommaSeparated" class="form-control" />
+                        <small class="text-muted">Nhập các kỹ năng phân tách bằng dấu phẩy. VD: C#, ASP.NET Core, MongoDB, Docker</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Embedded Address -->
+            <div class="card-hrm">
+                <div class="card-hrm-header">
+                    <h5 class="card-hrm-title">
+                        <i class="fa-solid fa-map-location-dot text-danger"></i> 3. Embedded Document: Địa Chỉ Thường Trú (<code>address</code>)
+                    </h5>
+                    <span class="badge bg-danger-subtle text-danger border">Subdocument</span>
+                </div>
+                <div class="card-hrm-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Address.Street" class="form-label fw-semibold"></label>
+                            <input asp-for="Address.Street" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Address.Ward" class="form-label fw-semibold"></label>
+                            <input asp-for="Address.Ward" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Address.District" class="form-label fw-semibold"></label>
+                            <input asp-for="Address.District" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Address.City" class="form-label fw-semibold"></label>
+                            <input asp-for="Address.City" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Address.Country" class="form-label fw-semibold"></label>
+                            <input asp-for="Address.Country" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Embedded EmergencyContact -->
+            <div class="card-hrm">
+                <div class="card-hrm-header">
+                    <h5 class="card-hrm-title">
+                        <i class="fa-solid fa-phone-volume text-success"></i> 4. Embedded Document: Liên Hệ Khẩn Cấp (<code>emergencyContact</code>)
+                    </h5>
+                    <span class="badge bg-success-subtle text-success border">Subdocument</span>
+                </div>
+                <div class="card-hrm-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="EmergencyContact.FullName" class="form-label fw-semibold"></label>
+                            <input asp-for="EmergencyContact.FullName" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EmergencyContact.Relationship" class="form-label fw-semibold"></label>
+                            <input asp-for="EmergencyContact.Relationship" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EmergencyContact.PhoneNumber" class="form-label fw-semibold"></label>
+                            <input asp-for="EmergencyContact.PhoneNumber" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mb-5">
+                <a asp-action="Index" class="btn btn-secondary px-4">Hủy</a>
+                <button type="submit" class="btn btn-primary-custom px-5">
+                    <i class="fa-solid fa-floppy-disk me-2"></i> Cập Nhật Thông Tin
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

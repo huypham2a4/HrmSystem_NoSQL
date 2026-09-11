@@ -1,0 +1,80 @@
+@model List<HrmSystem.Core.Entities.Department>
+@{
+    ViewData["Title"] = "Quản Lý Phòng Ban";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold mb-1">
+            <i class="fa-solid fa-building text-primary me-2"></i>Danh Sách Phòng Ban
+        </h3>
+        <p class="text-muted small mb-0">Collection <code>departments</code> kèm Embedded Document <code>location</code> (Tòa nhà, Tầng, Phòng) và Unique Index trên <code>code</code></p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary-custom">
+        <i class="fa-solid fa-plus me-1"></i> Thêm Phòng Ban Mới
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+    @foreach (var dept in Model)
+    {
+        <div class="col-lg-6">
+            <div class="card-hrm h-100">
+                <div class="card-hrm-header">
+                    <div>
+                        <span class="code-badge me-2">@dept.Code</span>
+                        <h5 class="d-inline fw-bold text-dark">@dept.Name</h5>
+                    </div>
+                    <span class="badge @(dept.Status == "Active" ? "bg-success" : "bg-secondary")">@dept.Status</span>
+                </div>
+                <div class="card-hrm-body">
+                    <p class="text-muted small mb-3">@dept.Description</p>
+
+                    <div class="p-3 bg-light rounded border mb-3">
+                        <h6 class="small fw-bold text-primary mb-2">
+                            <i class="fa-solid fa-location-dot text-danger me-1"></i>
+                            Embedded Document: Vị Trí Địa Lý (<code>location</code>)
+                        </h6>
+                        <div class="row g-2 small">
+                            <div class="col-6"><strong>Tòa nhà:</strong> @dept.Location.Building</div>
+                            <div class="col-6"><strong>Tầng:</strong> @dept.Location.Floor</div>
+                            <div class="col-6"><strong>Số phòng:</strong> @dept.Location.RoomNumber</div>
+                            <div class="col-6"><strong>Thành phố:</strong> @dept.Location.City</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 small mb-3">
+                        <div class="col-6">
+                            <span class="text-muted">Ngân sách:</span>
+                            <strong class="text-success d-block fs-6">@dept.Budget.ToString("N0") đ</strong>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted">Ngày thành lập:</span>
+                            <span class="d-block text-dark fw-semibold">@dept.EstablishedDate.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="small text-muted">
+                            <i class="fa-solid fa-envelope me-1"></i> @(dept.ContactEmail ?? "Chưa có email")
+                        </span>
+                        <div class="btn-group btn-group-sm">
+                            <a asp-action="Details" asp-route-id="@dept.Id" class="btn btn-outline-info" title="Xem danh sách nhân sự">
+                                <i class="fa-solid fa-users me-1"></i> Nhân sự
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@dept.Id" class="btn btn-outline-primary" title="Sửa">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@dept.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa phòng ban @dept.Name?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-danger" title="Xóa">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

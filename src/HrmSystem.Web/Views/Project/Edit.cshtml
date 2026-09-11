@@ -1,0 +1,71 @@
+@model HrmSystem.Core.Entities.Project
+@{
+    ViewData["Title"] = "Chỉnh Sửa Dự Án - " + Model.Name;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h3 class="fw-bold mb-0">Chỉnh Sửa Dự Án</h3>
+            <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
+        </div>
+
+        <div class="card-hrm">
+            <div class="card-hrm-body">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="Code" class="form-label fw-semibold"></label>
+                            <input asp-for="Code" class="form-control" readonly style="background-color: #f1f5f9;" />
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="Name" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DepartmentId" class="form-label fw-semibold"></label>
+                            <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.DepartmentList">
+                                <option value="">-- Chọn phòng ban chủ quản --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Budget" class="form-label fw-semibold"></label>
+                            <input asp-for="Budget" class="form-control" type="number" step="1000000" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="StartDate" class="form-label fw-semibold"></label>
+                            <input asp-for="StartDate" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EndDate" class="form-label fw-semibold"></label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Status" class="form-label fw-semibold"></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Active">Active (Đang chạy)</option>
+                                <option value="Planning">Planning (Lập kế hoạch)</option>
+                                <option value="Completed">Completed (Hoàn thành)</option>
+                                <option value="OnHold">OnHold (Tạm hoãn)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary-custom px-4">Cập Nhật Dự Án</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

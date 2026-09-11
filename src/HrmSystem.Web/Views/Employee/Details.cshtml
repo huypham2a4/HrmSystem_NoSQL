@@ -1,0 +1,314 @@
+@model HrmSystem.Core.Entities.Employee
+@{
+    ViewData["Title"] = "Hồ Sơ Nhân Viên - " + Model.FullName;
+    var assignedProjects = ViewBag.AssignedProjects as List<HrmSystem.Core.Entities.Project> ?? new List<HrmSystem.Core.Entities.Project>();
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h3 class="fw-bold mb-0">Hồ Sơ Chi Tiết Nhân Sự</h3>
+            <span class="code-badge fs-6">@Model.EmployeeCode</span>
+        </div>
+        <p class="text-muted small mb-0">Tài liệu BSON hoàn chỉnh với các trường Embedded Document và Array</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Danh sách
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Chỉnh sửa
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Left Profile Summary Card -->
+    <div class="col-lg-4">
+        <div class="card-hrm text-center p-4">
+            <div class="student-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem; background: linear-gradient(135deg, #4361ee, #7209b7); box-shadow: 0 8px 20px rgba(67, 97, 238, 0.35);">
+                @(Model.FullName.Split(' ').LastOrDefault()?.Substring(0, 1) ?? "NV")
+            </div>
+            <h4 class="fw-bold text-dark mb-1">@Model.FullName</h4>
+            <p class="text-primary fw-semibold mb-2">@Model.Position</p>
+
+            <div class="mb-3">
+                @switch (Model.Status)
+                {
+                    case "Active":
+                        <span class="badge-status-active">Đang làm việc (Active)</span>
+                        break;
+                    case "Probation":
+                        <span class="badge-status-probation">Thử việc (Probation)</span>
+                        break;
+                    case "OnLeave":
+                        <span class="badge-status-onleave">Nghỉ phép (OnLeave)</span>
+                        break;
+                    default:
+                        <span class="badge-status-terminated">@Model.Status</span>
+                        break;
+                }
+            </div>
+
+            <hr class="my-3 text-muted opacity-25" />
+
+            <div class="text-start small">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted"><i class="fa-solid fa-building text-secondary me-2"></i>Phòng ban:</span>
+                    <strong class="text-dark">@(string.IsNullOrEmpty(Model.DepartmentName) ? "Chưa xếp" : Model.DepartmentName)</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted"><i class="fa-solid fa-envelope text-secondary me-2"></i>Email:</span>
+                    <span class="text-dark">@Model.Email</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted"><i class="fa-solid fa-phone text-secondary me-2"></i>Điện thoại:</span>
+                    <span class="text-dark">@Model.PhoneNumber</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted"><i class="fa-solid fa-money-bill-wave text-success me-2"></i>Mức lương:</span>
+                    <strong class="text-success fs-6">@Model.Salary.ToString("N0") đ</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted"><i class="fa-solid fa-calendar-check text-secondary me-2"></i>Ngày vào làm:</span>
+                    <span class="text-dark">@Model.HireDate.ToString("dd/MM/yyyy")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Embedded Document: Người liên hệ khẩn cấp -->
+        <div class="card-hrm">
+            <div class="card-hrm-header">
+                <h6 class="card-hrm-title fs-6">
+                    <i class="fa-solid fa-phone-volume text-danger"></i>
+                    Embedded: Liên Hệ Khẩn Cấp (<code>emergencyContact</code>)
+                </h6>
+            </div>
+            <div class="card-hrm-body">
+                @if (Model.EmergencyContact != null && !string.IsNullOrEmpty(Model.EmergencyContact.FullName))
+                {
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-danger-subtle text-danger rounded-circle">
+                            <i class="fa-solid fa-user-shield fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">@Model.EmergencyContact.FullName</div>
+                            <div class="small text-muted">Mối quan hệ: <span class="badge bg-light text-dark border">@Model.EmergencyContact.Relationship</span></div>
+                            <div class="small fw-semibold text-danger mt-1">
+                                <i class="fa-solid fa-phone me-1"></i> @Model.EmergencyContact.PhoneNumber
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small mb-0">Chưa cập nhật người liên hệ khẩn cấp.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Embedded Document: Địa chỉ thường trú -->
+        <div class="card-hrm">
+            <div class="card-hrm-header">
+                <h6 class="card-hrm-title fs-6">
+                    <i class="fa-solid fa-map-location-dot text-primary"></i>
+                    Embedded: Địa Chỉ (<code>address</code>)
+                </h6>
+            </div>
+            <div class="card-hrm-body">
+                @if (Model.Address != null && (!string.IsNullOrEmpty(Model.Address.Street) || !string.IsNullOrEmpty(Model.Address.City)))
+                {
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-2"><strong class="text-muted">Đường:</strong> @(Model.Address.Street ?? "N/A")</li>
+                        <li class="mb-2"><strong class="text-muted">Phường/Xã:</strong> @(Model.Address.Ward ?? "N/A")</li>
+                        <li class="mb-2"><strong class="text-muted">Quận/Huyện:</strong> @(Model.Address.District ?? "N/A")</li>
+                        <li class="mb-2"><strong class="text-muted">Tỉnh/TP:</strong> @(Model.Address.City ?? "N/A")</li>
+                        <li><strong class="text-muted">Quốc gia:</strong> @(Model.Address.Country ?? "Việt Nam")</li>
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted small mb-0">Chưa cập nhật địa chỉ.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Detailed Sections -->
+    <div class="col-lg-8">
+        <!-- Array Field: Skills with Interactive $addToSet / $pull -->
+        <div class="card-hrm">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-code text-warning"></i>
+                    Mảng Kỹ Năng Chuyên Môn (Array Field <code>skills</code>)
+                </h5>
+                <span class="badge bg-warning-subtle text-dark border">MongoDB Atomic Array Ops</span>
+            </div>
+            <div class="card-hrm-body">
+                <p class="small text-muted mb-3">
+                    Thao tác cập nhật phần tử mảng tức thì bằng MongoDB <code>$addToSet</code> (Thêm không trùng) và <code>$pull</code> (Xóa).
+                </p>
+
+                <div id="skillsContainer" class="d-flex flex-wrap gap-2 mb-3">
+                    @foreach (var skill in Model.Skills)
+                    {
+                        <span class="badge bg-light text-dark border px-3 py-2 fs-6 d-flex align-items-center gap-2" id="skill-badge-@skill">
+                            <span>@skill</span>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-danger" onclick="removeSkill('@Model.Id', '@skill')" title="Xóa skill khỏi mảng ($pull)">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </span>
+                    }
+                </div>
+
+                <!-- Form thêm nhanh skill bằng Ajax -->
+                <div class="input-group" style="max-width: 450px;">
+                    <input type="text" id="newSkillInput" class="form-control" placeholder="Thêm kỹ năng mới (VD: MongoDB, Docker, GraphQL)..." />
+                    <button class="btn btn-warning text-dark fw-bold" type="button" onclick="addSkill('@Model.Id')">
+                        <i class="fa-solid fa-plus me-1"></i> Thêm ($addToSet)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Array of Embedded Documents: Certifications -->
+        <div class="card-hrm">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-award text-success"></i>
+                    Mảng Chứng Chỉ Chuyên Môn (Array Embedded Docs <code>certifications</code>)
+                </h5>
+                <span class="badge bg-success-subtle text-success border">Array of Documents</span>
+            </div>
+            <div class="card-hrm-body">
+                @if (Model.Certifications != null && Model.Certifications.Count > 0)
+                {
+                    <div class="row g-3">
+                        @foreach (var cert in Model.Certifications)
+                        {
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded border d-flex align-items-center gap-3">
+                                    <div class="p-2 bg-success text-white rounded">
+                                        <i class="fa-solid fa-certificate fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1 text-dark">@cert.Name</h6>
+                                        <small class="text-muted d-block">Đơn vị: <strong>@cert.IssuedBy</strong></small>
+                                        <small class="text-secondary">Năm cấp: @cert.Year</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small mb-0">Chưa có chứng chỉ nào được ghi nhận cho nhân sự này.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Array Field: Assigned Projects -->
+        <div class="card-hrm">
+            <div class="card-hrm-header">
+                <h5 class="card-hrm-title">
+                    <i class="fa-solid fa-diagram-project text-info"></i>
+                    Dự Án Đang Tham Gia (Mảng <code>projectIds</code> & Members)
+                </h5>
+                <span class="badge bg-info-subtle text-info border">@assignedProjects.Count Dự án</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hrm">
+                    <thead>
+                        <tr>
+                            <th>Mã DA</th>
+                            <th>Tên Dự Án</th>
+                            <th>Vai Trò</th>
+                            <th>Số Giờ/Tuần</th>
+                            <th>Trạng Thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (assignedProjects.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted small">
+                                    Nhân viên hiện chưa được phân công vào dự án nào.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var proj in assignedProjects)
+                        {
+                            var memberInfo = proj.Members.FirstOrDefault(m => m.EmployeeId == Model.Id);
+                            <tr>
+                                <td><span class="code-badge">@proj.Code</span></td>
+                                <td class="fw-bold text-dark">@proj.Name</td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary border">@(memberInfo?.Role ?? "Thành viên")</span>
+                                </td>
+                                <td>@(memberInfo?.AllocatedHoursPerWeek ?? 40) giờ/tuần</td>
+                                <td>
+                                    <span class="badge bg-success">@proj.Status</span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="Project" asp-action="Details" asp-route-id="@proj.Id" class="btn btn-sm btn-outline-secondary">
+                                        Xem dự án <i class="fa-solid fa-chevron-right ms-1"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function addSkill(empId) {
+        const input = document.getElementById('newSkillInput');
+        const skill = input.value.trim();
+        if (!skill) return;
+
+        fetch(`/Employee/QuickAddSkill?employeeId=${empId}&skill=${encodeURIComponent(skill)}`, {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                Swal.fire('Thông báo', data.message, 'warning');
+            }
+        });
+    }
+
+    function removeSkill(empId, skill) {
+        Swal.fire({
+            title: 'Xóa kỹ năng?',
+            text: `Bạn muốn xóa '${skill}' khỏi mảng skills của nhân viên?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/Employee/QuickRemoveSkill?employeeId=${empId}&skill=${encodeURIComponent(skill)}`, {
+                    method: 'POST'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        Swal.fire('Lỗi', data.message, 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>
+}

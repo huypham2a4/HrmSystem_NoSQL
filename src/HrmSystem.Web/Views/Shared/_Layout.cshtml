@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - HRM MongoDB Enterprise</title>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6.5.1 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Site CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div class="brand-text">
+                    <h4>HRM Cloud</h4>
+                    <small><i class="fa-solid fa-leaf text-success me-1"></i>MongoDB NoSQL</small>
+                </div>
+            </div>
+
+            <div class="sidebar-menu">
+                <div class="sidebar-category">Hệ Thống & Thống Kê</div>
+                <a asp-controller="Dashboard" asp-action="Index" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard Analytics</span>
+                </a>
+
+                <div class="sidebar-category mt-3">Quản Lý Nhân Sự</div>
+                <a asp-controller="Employee" asp-action="Index" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Employee" ? "active" : "")">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Nhân Viên (CRUD)</span>
+                </a>
+                <a asp-controller="Department" asp-action="Index" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Department" ? "active" : "")">
+                    <i class="fa-solid fa-building"></i>
+                    <span>Phòng Ban</span>
+                </a>
+                <a asp-controller="Project" asp-action="Index" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Project" ? "active" : "")">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>Dự Án & Phân Công</span>
+                </a>
+
+                <div class="sidebar-category mt-3">Đặc Tả NoSQL MongoDB</div>
+                <a href="/Dashboard#indexes-section" class="nav-link-custom">
+                    <i class="fa-solid fa-bolt text-warning"></i>
+                    <span>MongoDB Indexes</span>
+                </a>
+                <a href="/Dashboard#pipeline-section" class="nav-link-custom">
+                    <i class="fa-solid fa-filter text-info"></i>
+                    <span>Aggregation Pipeline</span>
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="student-card">
+                    <div class="student-avatar">PH</div>
+                    <div class="student-info">
+                        <h6>Phạm Thanh Huy</h6>
+                        <small>MSSV: 2001230304</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Top Navbar -->
+            <header class="app-navbar">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-dark px-3 py-2 text-white">
+                        <i class="fa-solid fa-server text-success me-1"></i> Provider: <strong>MongoDB</strong>
+                    </span>
+                    <span class="badge bg-light text-secondary border px-3 py-2 d-none d-md-inline-block">
+                        <i class="fa-solid fa-plug text-primary me-1"></i> Repository Pattern Pluggable
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <form asp-controller="Dashboard" asp-action="ReSeedData" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Nạp lại dữ liệu mẫu vào 3 collection nếu cần">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Nạp Dữ Liệu Mẫu
+                        </button>
+                    </form>
+                    <a asp-controller="Employee" asp-action="Create" class="btn btn-sm btn-primary-custom">
+                        <i class="fa-solid fa-user-plus me-1"></i> Thêm Nhân Viên
+                    </a>
+                </div>
+            </header>
+
+            <!-- Alerts Notification -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="container-fluid px-4 pt-3">
+                    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="fa-solid fa-circle-check me-2"></i> @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="container-fluid px-4 pt-3">
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> @TempData["ErrorMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            }
+
+            <!-- Body Content -->
+            <main class="app-content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js 4.4.1 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

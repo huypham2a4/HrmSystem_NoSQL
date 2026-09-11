@@ -1,0 +1,204 @@
+@model List<HrmSystem.Core.Entities.Employee>
+@{
+    ViewData["Title"] = "Quản Lý Nhân Sự (HRM)";
+    var departments = ViewBag.Departments as List<HrmSystem.Core.Entities.Department> ?? new List<HrmSystem.Core.Entities.Department>();
+    var popularSkills = ViewBag.PopularSkills as List<string> ?? new List<string>();
+    string? selectedDept = ViewBag.SelectedDepartmentId as string;
+    string? selectedSkill = ViewBag.SelectedSkill as string;
+    string? selectedStatus = ViewBag.SelectedStatus as string;
+    string? keyword = ViewBag.Keyword as string;
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold mb-1">
+            <i class="fa-solid fa-users text-primary me-2"></i>Danh Sách Nhân Viên
+        </h3>
+        <p class="text-muted mb-0 small">
+            Quản lý thông tin nhân sự với MongoDB (Embedded Documents: <code>address</code>, <code>emergencyContact</code> & Mảng: <code>skills</code>, <code>certifications</code>, <code>projectIds</code>)
+        </p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary-custom">
+        <i class="fa-solid fa-user-plus me-2"></i>Thêm Mới Nhân Viên
+    </a>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="card-hrm mb-4">
+    <div class="card-hrm-body p-3">
+        <form asp-action="Index" method="get" class="row g-2 align-items-center">
+            <div class="col-lg-4 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="keyword" value="@keyword" class="form-control" placeholder="Tìm theo tên, mã NV, chức danh, kỹ năng..." />
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <select name="departmentId" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Tất cả phòng ban --</option>
+                    @foreach (var d in departments)
+                    {
+                        <option value="@d.Id" selected="@(selectedDept == d.Id)">@d.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-lg-2 col-md-6">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Trạng thái --</option>
+                    <option value="Active" selected="@(selectedStatus == "Active")">Đang làm việc</option>
+                    <option value="Probation" selected="@(selectedStatus == "Probation")">Thử việc</option>
+                    <option value="OnLeave" selected="@(selectedStatus == "OnLeave")">Nghỉ phép</option>
+                    <option value="Terminated" selected="@(selectedStatus == "Terminated")">Đã thôi việc</option>
+                </select>
+            </div>
+
+            <div class="col-lg-3 col-md-6 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="fa-solid fa-filter me-1"></i> Lọc
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Đặt lại bộ lọc">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </a>
+            </div>
+        </form>
+
+        <!-- Quick Skill Filter Badges -->
+        @if (popularSkills.Count > 0)
+        {
+            <div class="d-flex align-items-center flex-wrap gap-1 mt-3 pt-2 border-top">
+                <span class="small fw-bold text-muted me-2"><i class="fa-solid fa-tags text-warning"></i> Lọc nhanh kỹ năng:</span>
+                @foreach (var s in popularSkills)
+                {
+                    <a asp-action="Index" asp-route-skill="@s" 
+                       class="badge @(selectedSkill == s ? "bg-primary text-white" : "badge-skill text-decoration-none")">
+                        @s
+                    </a>
+                }
+                @if (!string.IsNullOrEmpty(selectedSkill))
+                {
+                    <a asp-action="Index" class="badge bg-danger text-white text-decoration-none ms-2">
+                        <i class="fa-solid fa-xmark me-1"></i> Bỏ lọc skill
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Employees Data Table -->
+<div class="card-hrm">
+    <div class="card-hrm-header">
+        <h5 class="card-hrm-title">
+            <i class="fa-solid fa-id-card text-secondary"></i>
+            Danh Sách Nhân Viên (@Model.Count kết quả)
+        </h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hrm">
+            <thead>
+                <tr>
+                    <th>Mã NV</th>
+                    <th>Họ & Tên</th>
+                    <th>Phòng Ban</th>
+                    <th>Chức Danh</th>
+                    <th class="text-end">Mức Lương</th>
+                    <th>Mảng Kỹ Năng (Skills)</th>
+                    <th>Địa Chỉ (Embedded)</th>
+                    <th class="text-center">Trạng Thái</th>
+                    <th class="text-center">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-folder-open fs-1 d-block mb-3 text-secondary"></i>
+                            Không tìm thấy nhân viên nào phù hợp với điều kiện tìm kiếm.
+                        </td>
+                    </tr>
+                }
+                @foreach (var emp in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="code-badge">@emp.EmployeeCode</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="student-avatar" style="width: 32px; height: 32px; font-size: 0.75rem; background: linear-gradient(135deg, #4361ee, #3a0ca3);">
+                                    @(emp.FullName.Split(' ').LastOrDefault()?.Substring(0, 1) ?? "NV")
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">
+                                        <a asp-action="Details" asp-route-id="@emp.Id" class="text-decoration-none text-dark">@emp.FullName</a>
+                                    </div>
+                                    <small class="text-muted"><i class="fa-solid fa-envelope me-1"></i>@emp.Email</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                <i class="fa-solid fa-building me-1 text-primary"></i> @(string.IsNullOrEmpty(emp.DepartmentName) ? "Chưa xếp phòng" : emp.DepartmentName)
+                            </span>
+                        </td>
+                        <td class="fw-semibold text-secondary">@emp.Position</td>
+                        <td class="text-end fw-bold text-success">@emp.Salary.ToString("N0") đ</td>
+                        <td>
+                            <div style="max-width: 200px;">
+                                @foreach (var skill in emp.Skills.Take(3))
+                                {
+                                    <span class="badge-skill">@skill</span>
+                                }
+                                @if (emp.Skills.Count > 3)
+                                {
+                                    <span class="badge bg-secondary rounded-pill" title="@string.Join(", ", emp.Skills.Skip(3))">+@(emp.Skills.Count - 3)</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-muted d-block text-truncate" style="max-width: 140px;" title="@emp.Address?.ToString()">
+                                <i class="fa-solid fa-location-dot text-danger me-1"></i>@(emp.Address?.District ?? emp.Address?.City ?? "N/A")
+                            </small>
+                        </td>
+                        <td class="text-center">
+                            @switch (emp.Status)
+                            {
+                                case "Active":
+                                    <span class="badge-status-active">Đang làm việc</span>
+                                    break;
+                                case "Probation":
+                                    <span class="badge-status-probation">Thử việc</span>
+                                    break;
+                                case "OnLeave":
+                                    <span class="badge-status-onleave">Nghỉ phép</span>
+                                    break;
+                                default:
+                                    <span class="badge-status-terminated">@emp.Status</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="Details" asp-route-id="@emp.Id" class="btn btn-outline-info" title="Xem chi tiết hồ sơ">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@emp.Id" class="btn btn-outline-primary" title="Chỉnh sửa">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@emp.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhân viên @emp.FullName?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger" title="Xóa">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
